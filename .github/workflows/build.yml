@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p tessdata
-          base=https://github.com/tesseract-ocr/tessdata_fast/raw/main
+          base=https://github.com/tesseract-ocr/tessdata_best/raw/main
           curl -fL -o tessdata/eng.traineddata $base/eng.traineddata
           curl -fL -o tessdata/kor.traineddata $base/kor.traineddata
           ls -lh tessdata

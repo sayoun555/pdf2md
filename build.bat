@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 REM OCR 언어데이터(eng + kor) 내려받기
 if not exist tessdata mkdir tessdata
-set BASE=https://github.com/tesseract-ocr/tessdata_fast/raw/main
+set BASE=https://github.com/tesseract-ocr/tessdata_best/raw/main
 if not exist tessdata\eng.traineddata curl -fL -o tessdata\eng.traineddata %BASE%/eng.traineddata
 if not exist tessdata\kor.traineddata curl -fL -o tessdata\kor.traineddata %BASE%/kor.traineddata
 

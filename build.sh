@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 # OCR 언어데이터(eng + kor) 내려받기
 mkdir -p tessdata
-base=https://github.com/tesseract-ocr/tessdata_fast/raw/main
+base=https://github.com/tesseract-ocr/tessdata_best/raw/main
 [ -f tessdata/eng.traineddata ] || curl -fL -o tessdata/eng.traineddata "$base/eng.traineddata"
 [ -f tessdata/kor.traineddata ] || curl -fL -o tessdata/kor.traineddata "$base/kor.traineddata"
 
