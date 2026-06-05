@@ -119,6 +119,23 @@ def strip_furniture(text: str, furniture: set, top: int = 2, bot: int = 2) -> st
     return "\n".join(out)
 
 
+# --------------------------------------------------------------- 코드블럭 보호
+# pymupdf4llm 이 만든 ```코드 펜스``` 가 정리 단계에서 망가지지 않게 보호한다(언어 무관).
+
+def _protect_code(md: str):
+    blocks = []
+    def repl(m):
+        blocks.append(m.group(0))
+        return f"\x00CODE{len(blocks) - 1}\x00"
+    return re.sub(r"```.*?```", repl, md, flags=re.S), blocks
+
+
+def _restore_code(md: str, blocks: list) -> str:
+    for i, b in enumerate(blocks):
+        md = md.replace(f"\x00CODE{i}\x00", b)
+    return md
+
+
 def clean_markdown(chunks: list) -> str:
     """페이지 단위 청크를 가독성 좋은 하나의 마크다운으로 합친다."""
     furniture = detect_furniture(chunks) if len(chunks) >= 4 else set()
@@ -129,9 +146,11 @@ def clean_markdown(chunks: list) -> str:
             t = strip_furniture(t, furniture)
         parts.append(normalize_unicode(t).strip())
     md = "\n\n".join(p for p in parts if p)
+    md, blocks = _protect_code(md)  # 코드블럭은 정리에서 보호
     md = dehyphenate(md)
     md = strip_page_numbers(md)
-    return collapse_blanks(md)
+    md = collapse_blanks(md)
+    return _restore_code(md, blocks)
 
 
 # ----------------------------------------------------------------------- OCR
@@ -494,16 +513,13 @@ def convert(pdf_path, out_path, embed=False, images=True, toc=True, clean=True,
     else:
         sample = "".join(doc[i].get_text() for i in range(min(3, doc.page_count)))
         if not sample.strip():
-            print(
-                "⚠️  텍스트가 추출되지 않습니다. 스캔본일 수 있어요. → `--ocr` 옵션을 써보세요.",
-                file=sys.stderr,
-            )
+            print("⚠️  텍스트가 추출되지 않습니다. 스캔본일 수 있어요. → `--ocr` 옵션을 써보세요.",
+                  file=sys.stderr)
         raw = pymupdf4llm.to_markdown(doc, page_chunks=True, show_progress=True)
         chunks, seen = [], {}
         for idx, ch in enumerate(raw):
             text = ch["text"]
-            # pymupdf4llm이 비면(이미지 페이지로 오판 등) 임베디드 텍스트 레이어로 폴백.
-            # 이 덕분에 '텍스트 레이어 있는 스캔본'은 OCR(Tesseract) 없이도 변환된다.
+            # pymupdf4llm이 비면 임베디드 텍스트 레이어로 폴백
             if idx < doc.page_count and len(text.strip()) < 20:
                 native = doc[idx].get_text("text")
                 if len(native.strip()) > 20:
@@ -522,9 +538,11 @@ def convert(pdf_path, out_path, embed=False, images=True, toc=True, clean=True,
         auto = len(re.findall(r"(?m)^#{1,6}[ \t]", md))
         # 자동 헤더가 너무 많거나(OCR 과다검출) 너무 적으면(텍스트레이어 폴백) 북마크 구조 사용
         if auto > 1.5 * len(bookmarks) or auto < 0.5 * len(bookmarks):
+            md, _cb = _protect_code(md)  # 코드블럭 보호
             md = restructure_with_bookmarks(md, bookmarks)
             md = collapse_blanks(strip_scan_noise(md, bookmarks))
-            print(f"ℹ️  스캔본 감지: 자동 헤더 {auto}개 → 북마크 {len(bookmarks)}개 구조 재구성 + 노이즈 정리", file=sys.stderr)
+            md = _restore_code(md, _cb)
+            print(f"ℹ️  북마크 {len(bookmarks)}개 구조로 제목 재구성 + 노이즈 정리", file=sys.stderr)
 
     title = ((doc.metadata or {}).get("title") or "").strip()
     head = f"# {title}\n\n" if 0 < len(title) < 100 else ""
