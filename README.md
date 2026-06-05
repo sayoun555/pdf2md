@@ -3,42 +3,46 @@
 PDF(전자책)를 **로컬/오프라인**에서 `.md`로 변환합니다.
 목차 자동 생성, 이미지 추출/임베딩, **OCR 내장**(스캔본도 변환), 스캔본 구조 자동 보정.
 
-- 🖱 **클릭 실행 앱** (Windows / Linux / macOS) — 아무것도 설치 안 함, OCR 언어데이터까지 내장
+- 🖱 **클릭 실행 앱** (Windows / Linux / macOS) — 설치 불필요, OCR 언어데이터까지 내장
 - 🧰 **개발자용 CLI** — 파이썬으로 다양한 옵션 사용
 
 ---
 
-## 1. 그냥 쓰는 법 — 클릭 실행 앱 (설치 불필요)
+## 1. 그냥 쓰는 법 — 클릭 실행 앱 (설치 없음)
 
-### 앱 받기
-GitHub에서 빌드된 앱을 받습니다: **https://github.com/sayoun555/pdf2md**
-→ **Actions** 탭 → 최신 **"Build apps"** 실행 → 아래 **Artifacts** 에서 본인 OS 다운로드
+> **설치 과정 자체가 없습니다.** 파일 1개 받아서 실행하면 끝. OCR까지 내장이라 **아무것도 따로 안 깔아도 됩니다.**
 
-| OS | 파일 |
+### 받기 (로그인 없이 바로 다운로드)
+👉 **https://github.com/sayoun555/pdf2md/releases/latest** 에서 본인 OS 파일 하나만:
+
+| OS | 받을 파일 |
 |---|---|
-| Windows | `PDF-to-Markdown-Windows.exe` |
-| Linux | `PDF-to-Markdown-Linux` |
-| macOS | `PDF-to-Markdown-macOS`(.app) |
+| **Windows** | `PDF-to-Markdown-Windows.exe` |
+| **macOS** | `PDF-to-Markdown-macOS.zip` (풀면 `.app`) |
+| **Linux** | `PDF-to-Markdown-Linux` |
 
-> 각 파일은 **그 OS 전용**입니다 (윈도우 .exe를 맥에서 못 씀). 받는 사람에게 자기 OS 파일만 주세요.
+### 실행
 
-### 사용
-1. 앱을 **더블클릭**
-2. 파일 선택창에서 **PDF 선택**
-3. 잠시 후(스캔본은 몇 분) **PDF와 같은 폴더에 `.md` 생성** + "완료" 알림
+**🪟 Windows**
+1. `.exe` **더블클릭**
+2. "Windows가 PC를 보호함" 창이 뜨면 → **추가 정보 → 실행** *(서명 안 된 앱이라 처음 1회만)*
+3. 파일 선택창에서 **PDF 선택**
 
-OCR 언어데이터(eng+kor)가 앱에 내장돼 있어 **Tesseract 등 아무것도 설치할 필요가 없습니다.**
+**🍎 macOS**
+1. `.zip` 압축 풀기 → `PDF-to-Markdown-macOS.app`
+2. 앱 **우클릭 → 열기** *(처음 1회만. 안 열리면 터미널: `xattr -dr com.apple.quarantine PDF-to-Markdown-macOS.app`)*
+3. 파일 선택창에서 **PDF 선택**
 
-### 첫 실행 보안 경고 우회 (서명 안 된 앱이라 한 번만)
-- **Windows**: "Windows의 PC 보호" → **추가 정보 → 실행**
-- **macOS**: 앱 **우클릭 → 열기** (또는 터미널 `xattr -dr com.apple.quarantine "PDF-to-Markdown-macOS.app"`)
-- **Linux**: `chmod +x PDF-to-Markdown-Linux` 후 실행 (GUI 데스크톱 환경 필요)
-
-### 명령줄로도 가능 (선택)
-PDF 경로를 인자로 주면 창 없이 바로 변환됩니다.
+**🐧 Linux** — 더블클릭은 배포판마다 막혀 있어 **터미널 실행을 권장**
 ```bash
-./PDF-to-Markdown-macOS "내책.pdf"      # → 내책.md
+chmod +x PDF-to-Markdown-Linux
+./PDF-to-Markdown-Linux "책.pdf"     # ← PDF 경로를 주면 바로 변환
+# 인자 없이 실행하면 GUI 창이 뜸 (데스크톱 환경 필요)
 ```
+
+➡️ 변환되면 **그 PDF와 같은 폴더에 `.md` 파일**이 생깁니다. (스캔본은 몇 분 걸릴 수 있음)
+
+> 💡 Windows/macOS도 터미널에서 `앱 "책.pdf"` 처럼 PDF 경로를 주면 창 없이 바로 변환됩니다.
 
 ---
 
@@ -103,6 +107,7 @@ OCR 언어데이터를 자동으로 받아 앱에 동봉합니다.
 
 ### 클라우드에서 3개 OS 한 번에 (GitHub Actions)
 저장소 **Actions → "Build apps" → Run workflow** → 윈도우/리눅스/맥 앱이 빌드되어 Artifacts에 올라옵니다.
+배포는 그 결과물을 **Releases** 에 올리면 됩니다(로그인 없이 다운로드 가능).
 
 > OCR 정확도 조절: `.github/workflows/build.yml` 와 `build.sh`/`build.bat` 의
 > `tessdata_best`(현재, 최고 정확도) ↔ `tessdata_fast`(가볍고 빠름) 를 바꾸면 됩니다.
