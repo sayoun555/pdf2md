@@ -3,14 +3,21 @@
 
 PyInstaller --windowed 로 빌드하면 각 OS에서 더블클릭 가능한 앱이 된다.
 """
+import sys
 import threading
 import traceback
 from pathlib import Path
 
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+import pdf2md  # 변환 로직 재사용 (내장 OCR 설정 포함)
 
-import pdf2md  # 변환 로직 재사용
+
+def _cli(paths):
+    """PDF 경로를 인자로 주면 GUI 없이 바로 변환 (CLI/검증용)."""
+    for p in paths:
+        out = Path(p).with_suffix(".md")
+        pdf2md.convert(pdf_path=Path(p), out_path=out,
+                       embed=True, images=True, toc=True, clean=True)
+        print("변환 완료:", out)
 
 
 def _convert(pdf_path: str, on_done):
@@ -25,6 +32,15 @@ def _convert(pdf_path: str, on_done):
 
 
 def main():
+    # PDF 경로를 인자로 주면 GUI 없이 바로 변환
+    pdfs = [a for a in sys.argv[1:] if a.lower().endswith(".pdf")]
+    if pdfs:
+        _cli(pdfs)
+        return
+
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk
+
     root = tk.Tk()
     root.title("PDF → Markdown")
     root.geometry("470x230")
