@@ -150,7 +150,10 @@ def clean_markdown(chunks: list) -> str:
     md = dehyphenate(md)
     md = strip_page_numbers(md)
     md = collapse_blanks(md)
-    return _restore_code(md, blocks)
+    md = _restore_code(md, blocks)
+    # 빈 줄 하나로 갈라진 인접 코드블럭을 한 블록으로 병합 (언어 무관)
+    md = re.sub(r"\n```\n\n```\n", "\n\n", md)
+    return md
 
 
 # ----------------------------------------------------------------------- OCR
