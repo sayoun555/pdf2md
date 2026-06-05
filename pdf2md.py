@@ -40,6 +40,13 @@ except ImportError as e:  # 친절한 안내
         "    pip install -r requirements.txt"
     )
 
+# 단독 실행파일(PyInstaller)로 묶였을 때, 동봉된 OCR 언어데이터를 쓰도록 설정한다.
+# 덕분에 Tesseract를 따로 설치하지 않아도 OCR 품질로 변환된다.
+if getattr(sys, "frozen", False):
+    _bundled = os.path.join(getattr(sys, "_MEIPASS", ""), "tessdata")
+    if os.path.isdir(_bundled):
+        os.environ.setdefault("TESSDATA_PREFIX", _bundled)
+
 # 합자(ligature) → 일반 문자. 검색/복사/가독성 개선.
 LIGATURES = {
     "ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl",
@@ -495,6 +502,12 @@ def convert(pdf_path, out_path, embed=False, images=True, toc=True, clean=True,
         chunks, seen = [], {}
         for idx, ch in enumerate(raw):
             text = ch["text"]
+            # pymupdf4llm이 비면(이미지 페이지로 오판 등) 임베디드 텍스트 레이어로 폴백.
+            # 이 덕분에 '텍스트 레이어 있는 스캔본'은 OCR(Tesseract) 없이도 변환된다.
+            if idx < doc.page_count and len(text.strip()) < 20:
+                native = doc[idx].get_text("text")
+                if len(native.strip()) > 20:
+                    text = native
             if images and idx < doc.page_count:
                 refs = extract_page_images(doc, doc[idx], idx, img_dir, embed, seen)
                 if refs:
@@ -507,7 +520,8 @@ def convert(pdf_path, out_path, embed=False, images=True, toc=True, clean=True,
     bookmarks = doc.get_toc()
     if clean and bookmarks and len(bookmarks) >= 5:
         auto = len(re.findall(r"(?m)^#{1,6}[ \t]", md))
-        if auto > 1.5 * len(bookmarks):
+        # 자동 헤더가 너무 많거나(OCR 과다검출) 너무 적으면(텍스트레이어 폴백) 북마크 구조 사용
+        if auto > 1.5 * len(bookmarks) or auto < 0.5 * len(bookmarks):
             md = restructure_with_bookmarks(md, bookmarks)
             md = collapse_blanks(strip_scan_noise(md, bookmarks))
             print(f"ℹ️  스캔본 감지: 자동 헤더 {auto}개 → 북마크 {len(bookmarks)}개 구조 재구성 + 노이즈 정리", file=sys.stderr)

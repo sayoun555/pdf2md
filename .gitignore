@@ -6,9 +6,13 @@ __pycache__/
 # 빌드 산출물
 build/
 dist/
+apps/
 *.spec
 *.app/
 *.zip
+
+# OCR 언어데이터 (빌드 때 받음, 저장소엔 안 올림)
+tessdata/
 
 # 입력 PDF / 변환 결과 (저작권·용량 때문에 업로드 안 함)
 pdf/

@@ -60,7 +60,10 @@ python pdf2md.py book.pdf --raw
   가짜 헤더를 걷어내고 **북마크 구조로 제목을 재구성** + 중복 제목·러닝헤더 제거
 
 ## 스캔본(이미지 PDF) OCR
-글자가 이미지로 된 스캔 PDF는 `--ocr`로 처리. **Tesseract 별도 설치 필요**:
+> **빌드된 앱(.exe/.app/Linux 바이너리)에는 OCR 언어데이터(eng+kor)가 내장**되어 있어
+> Tesseract를 따로 설치하지 않아도 OCR 품질로 변환됩니다.
+
+소스로 직접 돌릴 때만 Tesseract가 필요합니다:
 
 ```bash
 brew install tesseract tesseract-lang
